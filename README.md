@@ -1,6 +1,6 @@
 # Back projection
 
-This program reads a file containing the neutron double scattering events, and reconstructs an image of the neutron source.
+This program reads a file containing the neutron double scattering events, and reconstructs an image of the neutron source. Also available in [Github](https://github.com/fm140905/NPRE554-Back-projection-in-neutron-imaging.git)
 
 Require [ROOT](https://root.cern/install/) installation.
 
