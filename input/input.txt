@@ -1,0 +1,57 @@
+################################# General Rules ############################################
+
+	# (1) '#' stands for comments.
+	# (2) blank line will be ignored.
+	# (3) tabs and spaces at the beginning of a line will be ignored.
+
+############################################################################################
+
+################################# Specify File Path ################################################
+# Input file 1, list of coincident neutron events
+	# source 1
+	CoincidencesFile:  input/coincidences_s1.txt
+	# source 2
+	# CoincidencesFile:  input/coincidences_s2.txt
+
+# Input file 2, Light output to energy
+    LO2EnergyFile:  input/LO2Energy.csv
+
+# Output image 
+    OutputFile:  output/s1.png 
+	# OutputFile:  output/s2.png  
+
+############################################################################################
+
+################################# Detector positions ################################################
+# Number of detectors
+    DetNum: 5
+# Channel number, x, y, z, sigma_x, sigma_y, sigma_z. in cm. comma separated
+	CHANNEL: 0,  0,  0, 33, 0.1, 0.1, 0.1
+	CHANNEL: 1, 12,-36, 63, 0.1, 0.1, 0.1
+	CHANNEL: 2, 12,  0, 71, 0.1, 0.1, 0.1
+	CHANNEL: 3, 12,-36, 32, 0.1, 0.1, 0.1
+	CHANNEL: 4,  0,-36, 52, 0.1, 0.1, 0.1
+############################################################################################
+
+# Enable lightout to energy
+# if input is energy (Mev), 0; if input is lightout (MeVee), 1
+	EnableLO2Energy: 0
+
+# time resolution, in nanoseconds
+	SigmaT: 0.5
+
+# Radius of the projection sphere, in cm
+	Radius: 500
+
+# Plot True source position for comparison
+# source 1
+# true azimuthal angle and uncertainty in degrees, -180 ~180
+	TrueAzimuth: 86.6335, 5
+# true elvation angle and uncertainty in degrees, -90 ~90
+	TrueElevation: 0, 5
+# source 2
+# true azimuthal angle and uncertainty in degrees, -180 ~180
+#	TrueAzimuth: 86.6335, 5
+# true elvation angle and uncertainty in degrees, -90 ~90
+#	TrueElevation: 12.9631, 5
+
