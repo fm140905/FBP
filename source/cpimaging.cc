@@ -160,23 +160,7 @@ void cpFBP(const Parameters settings, const std::vector<neutronPair>& tuples, st
         }
         theta += dtheta * M_PI / 180;
     }
-    
-    // FBP image
-    // std::vector<std::vector<Float_t>> ImageFBP(thetaBins, std::vector<Float_t>(phiBins, 0));
-
-    // // detector positions
-    // std::vector<std::vector<Float_t> > detLocs;
-    // detLocs.push_back(std::vector<Float_t>{0,0,33}); // ch0, cm
-    // detLocs.push_back(std::vector<Float_t>{12,-36,63}); // ch1, cm
-    // detLocs.push_back(std::vector<Float_t>{12,0,71}); // ch2, cm
-    // detLocs.push_back(std::vector<Float_t>{12,-36,32}); // ch3, cm
-    // detLocs.push_back(std::vector<Float_t>{0,-36,52}); // ch4, cm
-    // detLocs.push_back(std::vector<Float_t>{0-2.54,0,33-2.54}); // ch0, cm
-    // detLocs.push_back(std::vector<Float_t>{12+2.54,-36,63-2.54}); // ch1, cm
-    // detLocs.push_back(std::vector<Float_t>{12+2.54,0,71-2.54}); // ch2, cm
-    // detLocs.push_back(std::vector<Float_t>{12+2.54,-36,32-2.54}); // ch3, cm
-    // detLocs.push_back(std::vector<Float_t>{0-2.54,-36,52-2.54}); // ch4, cm
-    
+        
     u_int CH0(0);
     u_int CH1(0);
     float_t ErgToF(0);
@@ -192,15 +176,6 @@ void cpFBP(const Parameters settings, const std::vector<neutronPair>& tuples, st
     float_t beta(0);
     // sigma
     const float_t sigmat=settings.SigmaT; // ns
-    // const float_t sigmaE; // MeV
-    // const float_t sigmax0(2.54);//cm
-    // const float_t sigmax1(2.54);//cm
-    // const float_t sigmax0(0.1);//cm
-    // const float_t sigmax1(0.1);//cm
-    // const float_t sigmay0(2.54);//cm
-    // const float_t sigmay1(2.54);//cm
-    // const float_t sigmaz0(2.54);//cm
-    // const float_t sigmaz1(2.54);//cm
     float_t sigmabeta(0);
     float_t sigmaalpha(0);
 
@@ -210,34 +185,13 @@ void cpFBP(const Parameters settings, const std::vector<neutronPair>& tuples, st
     float temp3(0);
     int i = 0;
 
-
-    // float progress = 0.0;
-    // while (progress < 1.0) {
-    //     int barWidth = 70;
-
-    //     std::cout << "[";
-    //     int pos = barWidth * progress;
-    //     for (int i = 0; i < barWidth; ++i) {
-    //         if (i < pos) std::cout << "=";
-    //         else if (i == pos) std::cout << ">";
-    //         else std::cout << " ";
-    //     }
-    //     std::cout << "] " << int(progress * 100.0) << " %\r";
-    //     std::cout.flush();
-
-    //     progress += 0.16; // for demonstration only
-    // }
-    // std::cout << std::endl;
-
-
-
     std::cout << "Projecting cones onto the designated spherical surface..."<<std::endl;
     float progress=0.0;
     u_int currentConeNum(0);
     u_int totalConeNum(tuples.size());
     for (neutronPair const &event : tuples)
     {
-
+        std::vector<std::vector<Float_t>> newCone(thetaBins, std::vector<Float_t>(phiBins, 0));
         // show progress bar
         int barWidth = 70;
         currentConeNum++;
@@ -255,18 +209,9 @@ void cpFBP(const Parameters settings, const std::vector<neutronPair>& tuples, st
             std::cout.flush();
         }
         
-        // i++;
-        // if (i != 3)
-        // {
-        //     continue;
-        // }
-        
         CH0 = event.CH0;
         CH1 = event.CH1;
         sigmaalpha=0;
-        // dx10 = detLocs[CH1][0]-detLocs[CH0][0];
-        // dy10 = detLocs[CH1][1]-detLocs[CH0][1];
-        // dz10 = detLocs[CH1][2]-detLocs[CH0][2];
         dx10 = settings.Detectors.at(event.CH1).pos_x - settings.Detectors.at(event.CH0).pos_x;
         dy10 = settings.Detectors.at(event.CH1).pos_y - settings.Detectors.at(event.CH0).pos_y;
         dz10 = settings.Detectors.at(event.CH1).pos_z - settings.Detectors.at(event.CH0).pos_z;
@@ -293,6 +238,7 @@ void cpFBP(const Parameters settings, const std::vector<neutronPair>& tuples, st
         sigmaalpha += std::pow(2*event.Energy0*temp*dx10dotsigma1/dr10square,2);
         // sigmaalpha = std::sqrt(sigmaalpha);
 
+        double pixelSum(0);
         for (int i =0; i < thetaBins; i++)
         {
             // theta = thetaMin + i * dtheta;
@@ -324,9 +270,17 @@ void cpFBP(const Parameters settings, const std::vector<neutronPair>& tuples, st
                     // sigmabeta = std::sqrt(sigmabeta);
 
                     // pixel value
-                    ImageFBP[i][j] += std::exp(-1.0*(beta-alpha)*(beta-alpha) / (2*(sigmaalpha + sigmabeta)));
-                    // ImageFBP[i][j] += (beta-alpha)*(beta-alpha);
+                    newCone[i][j] = std::exp(-1.0*(beta-alpha)*(beta-alpha) / (2*(sigmaalpha + sigmabeta)));
+                    pixelSum += newCone[i][j];
                 }
+            }
+        }
+
+        for (int i =0; i < thetaBins; i++)
+        {
+            for (int j = 0; j < phiBins; j++)
+            {
+                ImageFBP[i][j] += newCone[i][j] / pixelSum;
             }
         }
     }
