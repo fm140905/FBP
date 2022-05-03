@@ -9,6 +9,7 @@
 ################################# Specify File Path ################################################
 # Input file 1, list of coincident neutron events
 	# source 1
+	# Columns: time of flight (ns), energy deposited or LO in first detector, first channel, second channel
 	CoincidencesFile:  input/coincidences_s1.txt
 	# source 2
 	# CoincidencesFile:  input/coincidences_s2.txt
