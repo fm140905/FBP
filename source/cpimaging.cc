@@ -73,7 +73,7 @@ Float_t LO2EnergyTable::getEnergy(const Float_t LO)
 //         }
 //     }
 // }
-void loadNeutronPairs(const Parameters settings, std::vector<neutronPair>& tuples)
+void loadNeutronPairs(const Parameters settings, std::vector<NeutronPair>& tuples)
 {
     // Lightoutput to energy
     LO2EnergyTable LO2Energy(settings.LO2EnergyFile);
@@ -104,7 +104,7 @@ void loadNeutronPairs(const Parameters settings, std::vector<neutronPair>& tuple
                 // {
                 //     continue;
                 // }
-                tuples.push_back(neutronPair(delT, LO2Energy.getEnergy(Energy0), CH0, CH1));
+                tuples.push_back(NeutronPair(delT, LO2Energy.getEnergy(Energy0), CH0, CH1));
             }
             lineIndex ++;
         }
@@ -121,14 +121,14 @@ void loadNeutronPairs(const Parameters settings, std::vector<neutronPair>& tuple
                 // {
                 //     continue;
                 // }
-                tuples.push_back(neutronPair(delT, Energy0, CH0, CH1));
+                tuples.push_back(NeutronPair(delT, Energy0, CH0, CH1));
             }
             lineIndex ++;
         }
     }
 }
 
-void cpFBP(const Parameters settings, const std::vector<neutronPair>& tuples, std::vector<std::vector<Float_t>>& ImageFBP)
+void cpFBP(const Parameters settings, const std::vector<NeutronPair>& tuples, std::vector<std::vector<Float_t>>& ImageFBP)
 {
     // Altitude angle
     // int thetaBins = 180;
@@ -169,7 +169,7 @@ void cpFBP(const Parameters settings, const std::vector<neutronPair>& tuples, st
     float progress=0.0;
     u_int currentConeNum(0);
     u_int totalConeNum(tuples.size());
-    for (neutronPair const &event : tuples)
+    for (NeutronPair const &event : tuples)
     {
         // if (currentConeNum < 10) 
         // {

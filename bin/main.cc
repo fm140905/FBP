@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 
     // load coincident events
     std::cout << "Reading neutron coincidences from " << setting.CoincidenceFile << std::endl;
-    std::vector<neutronPair> neutronPairs;
+    std::vector<NeutronPair> neutronPairs;
     loadNeutronPairs(setting, neutronPairs);
 
     // create image

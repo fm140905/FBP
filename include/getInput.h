@@ -10,6 +10,10 @@
 #include <algorithm>
 #include <map>
 
+/**
+ * @brief Struct for stroring the detector positions.
+ * 
+ */
 struct DetectorInfo
 {
     // // channel number
@@ -28,6 +32,10 @@ struct DetectorInfo
     double sigma_z;
 };
 
+/**
+ * @brief Struct storing parameters read from the input file.
+ * 
+ */
 struct Parameters
 {
     // Input file 1, list of coincident neutron events
@@ -48,14 +56,19 @@ struct Parameters
     std::vector<double> TrueElevation;
 };
 
-
-
 std::string trim(const std::string& str,
                  const std::string& whitespace = " \t");
 
 std::string removeComments(const std::string& str,
                  const std::string& begChar);
 
+/**
+ * @brief read input file and save the parameters
+ * 
+ * @param filepath path to the input file
+ * @param setting struct storing the input parameters
+ * @return int 
+ */
 int getInput(const std::string filepath, Parameters& setting);
 
 #endif
