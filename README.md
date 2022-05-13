@@ -4,6 +4,25 @@ This program reads a file containing the neutron double scattering events, and r
 
 Require [ROOT](https://root.cern/install/) installation.
 
-Change the input parameters in `input/input.txt`.
+## Compile
+- Install `root`(v6.20 or above), `cmake` and `git`.
+- Open a new terminal and run 
+    ```bash
+    git clone https://github.com/fm140905/NPRE554-Back-projection-in-neutron-imaging.git
+    ```
+- `cd` into the repo that you have just cloned.
+- Run 
+  ```bash
+  mkdir -p build
+  cd build
+  cmake ..
+  cmake --build .
+  ```
+  to compile the project.
 
-To compile, run `make` in the terminal; to execute, run `bin/main` in the terminal.
+## Test
+- In the main folder run `bin/main`. You should see a status bar and an image should pop up when it reaches 100%.
+## Use
+- `coincidences_s1.txt` and `coincidences_s2.txt` contain the list of coincidence events. Make a new file of the same format from your simulation/experiment data. 
+- Change the input parameters in `input/input.txt` accordingly.
+- In the main folder run `bin/main`.
