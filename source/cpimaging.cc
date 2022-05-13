@@ -171,12 +171,12 @@ void cpFBP(const Parameters settings, const std::vector<neutronPair>& tuples, st
     u_int totalConeNum(tuples.size());
     for (neutronPair const &event : tuples)
     {
-        // if (currentConeNum != 5) 
+        // if (currentConeNum < 10) 
         // {
         //     currentConeNum++;
         //     continue;
         // }
-        // if (currentConeNum >= 300) 
+        // if (currentConeNum >= 20) 
         // {
         //     break;
         // }
