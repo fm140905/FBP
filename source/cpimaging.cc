@@ -160,29 +160,9 @@ void cpFBP(const Parameters settings, const std::vector<neutronPair>& tuples, st
         }
         theta += dtheta * M_PI / 180;
     }
-        
-    u_int CH0(0);
-    u_int CH1(0);
-    float_t ErgToF(0);
-    float_t dx10,dy10,dz10;
-    float_t dxb0,dyb0,dzb0;
-    float_t dr10square(0);
-    float_t drb0square(0);
-    float_t dr10dotdrb0(0);
-    float dx10dotsigma0(0);
-    float dx10dotsigma1(0);
 
-    float_t alpha(0);
-    float_t beta(0);
-    // sigma
     const float_t sigmat=settings.SigmaT; // ns
-    float_t sigmabeta(0);
-    float_t sigmaalpha(0);
-
     const float_t k(0.5*939.56542052/898.755719); // Mev / (cm/ns)^2
-    float temp(0);
-    float temp2(0);
-    float temp3(0);
     int i = 0;
 
     std::cout << "Projecting cones onto the designated spherical surface..."<<std::endl;
@@ -191,6 +171,15 @@ void cpFBP(const Parameters settings, const std::vector<neutronPair>& tuples, st
     u_int totalConeNum(tuples.size());
     for (neutronPair const &event : tuples)
     {
+        // if (currentConeNum != 5) 
+        // {
+        //     currentConeNum++;
+        //     continue;
+        // }
+        // if (currentConeNum >= 300) 
+        // {
+        //     break;
+        // }
         std::vector<std::vector<Float_t>> newCone(thetaBins, std::vector<Float_t>(phiBins, 0));
         // show progress bar
         int barWidth = 70;
@@ -209,64 +198,60 @@ void cpFBP(const Parameters settings, const std::vector<neutronPair>& tuples, st
             std::cout.flush();
         }
         
-        CH0 = event.CH0;
-        CH1 = event.CH1;
-        sigmaalpha=0;
-        dx10 = settings.Detectors.at(event.CH1).pos_x - settings.Detectors.at(event.CH0).pos_x;
-        dy10 = settings.Detectors.at(event.CH1).pos_y - settings.Detectors.at(event.CH0).pos_y;
-        dz10 = settings.Detectors.at(event.CH1).pos_z - settings.Detectors.at(event.CH0).pos_z;
-        dr10square = (dx10 * dx10 + dy10 * dy10 + dz10 * dz10); // cm^2
+        const int CH0 = event.CH0;
+        const int CH1 = event.CH1;
+
+        const float dx10 = settings.Detectors.at(CH1).pos_x - settings.Detectors.at(CH0).pos_x;
+        const float dy10 = settings.Detectors.at(CH1).pos_y - settings.Detectors.at(CH0).pos_y;
+        const float dz10 = settings.Detectors.at(CH1).pos_z - settings.Detectors.at(CH0).pos_z;
+        const float dr10square = (dx10 * dx10 + dy10 * dy10 + dz10 * dz10); // cm^2
         // dx10 dot sigma_0
-        dx10dotsigma0 = (dx10 * settings.Detectors.at(event.CH0).sigma_x + 
-                         dy10 * settings.Detectors.at(event.CH0).sigma_y + 
-                         dz10 * settings.Detectors.at(event.CH0).sigma_z); // cm^2
+        const float dx10dotsigma0 = (dx10 * settings.Detectors.at(CH0).sigma_x + 
+                         dy10 * settings.Detectors.at(CH0).sigma_y + 
+                         dz10 * settings.Detectors.at(CH0).sigma_z); // cm^2
         // dx10 dot sigma_1
-        dx10dotsigma1 = (dx10 * settings.Detectors.at(event.CH1).sigma_x + 
-                         dy10 * settings.Detectors.at(event.CH1).sigma_y + 
-                         dz10 * settings.Detectors.at(event.CH1).sigma_z); // cm^2
+        const float dx10dotsigma1 = (dx10 * settings.Detectors.at(CH1).sigma_x + 
+                         dy10 * settings.Detectors.at(CH1).sigma_y + 
+                         dz10 * settings.Detectors.at(CH1).sigma_z); // cm^2
         // Energy of the scattered neutron, MeV
-        ErgToF = k*(dr10square)/std::pow(event.delT,2); // MeV
+        const float ErgToF = k*(dr10square)/std::pow(event.delT,2); // MeV
         // cosine squared
-        alpha = ErgToF / (ErgToF + event.Energy0);
+        float alpha = ErgToF / (ErgToF + event.Energy0);
         // uncertainty
-        temp = alpha / (event.Energy0 + ErgToF);
+        float temp = alpha / (event.Energy0 + ErgToF);
         // partial alpha over partial t
-        sigmaalpha += std::pow(2*event.Energy0 / event.delT*temp*sigmat,2);
+        float sigmaalpha = std::pow(2*event.Energy0 / event.delT*temp*sigmat,2);
         // partial alpha over x0,y0,z0
         sigmaalpha += std::pow(2*event.Energy0*temp*dx10dotsigma0/dr10square,2);
         // partial alpha over x1,y1,z1
         sigmaalpha += std::pow(2*event.Energy0*temp*dx10dotsigma1/dr10square,2);
-        // sigmaalpha = std::sqrt(sigmaalpha);
 
         double pixelSum(0);
+        #pragma omp parallel for shared(xbs, alpha, sigmaalpha) reduction(+:pixelSum) collapse(2)
         for (int i =0; i < thetaBins; i++)
         {
-            // theta = thetaMin + i * dtheta;
-            sigmabeta=0;
-            
             for (int j = 0; j < phiBins; j++)
             {
-                dxb0 = xbs[i][j][0] - settings.Detectors.at(event.CH0).pos_x;
-                dyb0 = xbs[i][j][1] - settings.Detectors.at(event.CH0).pos_y;
-                dzb0 = xbs[i][j][2] - settings.Detectors.at(event.CH0).pos_z;
-                drb0square = dxb0 * dxb0 + dyb0 * dyb0 + dzb0 * dzb0;
-                dr10dotdrb0 = dx10 * dxb0 + dy10 * dyb0 + dz10 * dzb0;
-                // if(dr10dotdrb0 < 0)
+                float dxb0 = xbs[i][j][0] - settings.Detectors.at(CH0).pos_x;
+                float dyb0 = xbs[i][j][1] - settings.Detectors.at(CH0).pos_y;
+                float dzb0 = xbs[i][j][2] - settings.Detectors.at(CH0).pos_z;
+                float drb0square = dxb0 * dxb0 + dyb0 * dyb0 + dzb0 * dzb0;
+                float dr10dotdrb0 = dx10 * dxb0 + dy10 * dyb0 + dz10 * dzb0;
+                if(dr10dotdrb0 < 0)
                 {
-                    // phi = phiMin + j * dphi;
-                    beta = std::pow(dr10dotdrb0, 2) / (dr10square * drb0square);
+                    float beta = std::pow(dr10dotdrb0, 2) / (dr10square * drb0square);
                     // uncertainty
                     // partial beta over x1,y1,z1
-                    temp = beta / dr10dotdrb0;
-                    temp2 = beta / dr10square;
-                    temp3 = beta / drb0square;
-                    sigmabeta += (std::pow((2*dxb0*temp-2*dx10*temp2) * settings.Detectors.at(event.CH1).sigma_x,2)+
-                                  std::pow((2*dyb0*temp-2*dy10*temp2) * settings.Detectors.at(event.CH1).sigma_y,2)+
-                                  std::pow((2*dzb0*temp-2*dz10*temp2) * settings.Detectors.at(event.CH1).sigma_z,2));
+                    float temp1 = beta / dr10dotdrb0;
+                    float temp2 = beta / dr10square;
+                    float temp3 = beta / drb0square;
+                    float sigmabeta = (std::pow((2*dxb0*temp1-2*dx10*temp2) * settings.Detectors.at(CH1).sigma_x,2)+
+                                  std::pow((2*dyb0*temp1-2*dy10*temp2) * settings.Detectors.at(CH1).sigma_y,2)+
+                                  std::pow((2*dzb0*temp1-2*dz10*temp2) * settings.Detectors.at(CH1).sigma_z,2));
                     // partial beta over x0,y0,z0
-                    sigmabeta += (std::pow((-2*(dxb0+dx10)*temp+2*dx10*temp2+2*dxb0*temp3) * settings.Detectors.at(event.CH0).sigma_x,2)+
-                                  std::pow((-2*(dyb0+dy10)*temp+2*dy10*temp2+2*dyb0*temp3) * settings.Detectors.at(event.CH0).sigma_y,2)+
-                                  std::pow((-2*(dzb0+dz10)*temp+2*dz10*temp2+2*dzb0*temp3) * settings.Detectors.at(event.CH0).sigma_z,2));
+                    sigmabeta += (std::pow((-2*(dxb0+dx10)*temp1+2*dx10*temp2+2*dxb0*temp3) * settings.Detectors.at(CH0).sigma_x,2)+
+                                  std::pow((-2*(dyb0+dy10)*temp1+2*dy10*temp2+2*dyb0*temp3) * settings.Detectors.at(CH0).sigma_y,2)+
+                                  std::pow((-2*(dzb0+dz10)*temp1+2*dz10*temp2+2*dzb0*temp3) * settings.Detectors.at(CH0).sigma_z,2));
                     // sigmabeta = std::sqrt(sigmabeta);
 
                     // pixel value
@@ -276,6 +261,13 @@ void cpFBP(const Parameters settings, const std::vector<neutronPair>& tuples, st
             }
         }
 
+        if (pixelSum == 0)
+        {
+            std::cout << "Event " << currentConeNum - 1 << " results in an empty image." << '\n';
+            continue;
+        }
+        
+        #pragma omp parallel for shared(pixelSum, newCone, ImageFBP) collapse(2)
         for (int i =0; i < thetaBins; i++)
         {
             for (int j = 0; j < phiBins; j++)
@@ -287,7 +279,7 @@ void cpFBP(const Parameters settings, const std::vector<neutronPair>& tuples, st
     std::cout << std::endl;
 }
 
-void getImage(const Parameters settings, TH2D *histo, TCanvas *canvas, const std::vector<std::vector<Float_t>>& imageFBP)
+void plotImage(const Parameters settings, TH2D *histo, TCanvas *canvas, const std::vector<std::vector<Float_t>>& imageFBP)
 {
     // // canvas1->cd(4)->SetFrameFillColor(TColor::GetColorPalette(0));
     int phiBins = histo->GetNbinsX();
@@ -378,7 +370,45 @@ void getImage(const Parameters settings, TH2D *histo, TCanvas *canvas, const std
                                  settings.TrueAzimuth[1], settings.TrueElevation[1]);
     el2->SetFillColor(0);
     el2->SetFillStyle(0);
-    el2->SetLineColor(4);
+    el2->SetLineColor(2);
     el2->Draw("SAME");
     canvas->Draw();
+}
+
+bool saveImage2Txt(const std::string fpath, const std::vector<std::vector<Float_t>>& imageFBP)
+{
+    std::ofstream outf(fpath);
+    if (!outf.good())
+    {
+        return false;
+    }
+    const int thetaBins = imageFBP.size();
+    const int phiBins = imageFBP[0].size();
+    Float_t dtheta = 179/float_t(thetaBins);
+    Float_t thetaMin = -89;//
+    Float_t thetaMax = 89;//
+    // Azimuthal angle
+    Float_t dphi = 360/float_t(phiBins);
+    Float_t phiMin = -180 + dphi / 2;//
+    Float_t phiMax = 180 - dphi / 2;//
+
+    // creata a sphere and pixelate it
+    float_t theta(thetaMin);
+    float_t phi(phiMin);
+    outf << std::setw(8)  << "Elvation" << std::setw(8) << "Azimuth" << std::setw(13) << "Counts" << '\n';
+    for (int i = 0; i < thetaBins; i++)
+    {
+        phi = phiMin;
+        for (int j = 0; j < phiBins; j++)
+        {
+            phi += dphi;
+            outf << std::fixed    << std::setprecision(2)
+                 << std::setw(8)  << phi
+                 << std::setw(8)  << theta
+                 << std::fixed    << std::setprecision(8)
+                 << std::setw(13) << imageFBP[i][j] << '\n';
+        }
+        theta += dtheta;
+    }
+    return true;
 }

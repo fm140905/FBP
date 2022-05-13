@@ -46,10 +46,12 @@ int main(int argc, char *argv[])
     std::vector<std::vector<Float_t>> imageFBP(thetaBins, std::vector<Float_t>(phiBins, 0));
     cpFBP(setting, neutronPairs, imageFBP);
 
+    // save image data to a text file
+    saveImage2Txt(setting.OutImageFile.substr(0, setting.OutImageFile.find_last_of('.'))+".txt", imageFBP);
     // plot
     TH2D *sino = new TH2D("ROI", " ; Azimuth; Elevation", phiBins, -180, 180, thetaBins, -89.5, 89.5);
     TCanvas *canvas4 = new TCanvas("THCanvas","Sinocanvas", 1000, 500);
-    getImage(setting, sino, canvas4, imageFBP);
+    plotImage(setting, sino, canvas4, imageFBP);
     canvas4->SaveAs(setting.OutImageFile.c_str());
 
     auto endTime = std::chrono::high_resolution_clock::now();

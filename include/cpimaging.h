@@ -15,6 +15,8 @@
 #include "TStyle.h"
 #include "TEllipse.h"
 
+#include "omp.h"
+
 #include "getInput.h"
 
 class neutronPair
@@ -67,6 +69,8 @@ void loadNeutronPairs(const Parameters settings, std::vector<neutronPair>& tuple
 
 void cpFBP(const Parameters settings, const std::vector<neutronPair>& tuples, std::vector<std::vector<Float_t>>& ImageFBP);
 
-void getImage(const Parameters settings, TH2D *histo, TCanvas *canvas, const std::vector<std::vector<Float_t>>& imageFBP);
+void plotImage(const Parameters settings, TH2D *histo, TCanvas *canvas, const std::vector<std::vector<Float_t>>& imageFBP);
+
+bool saveImage2Txt(const std::string fpath, const std::vector<std::vector<Float_t>>& imageFBP);
 
 #endif // CPIMAGING_H
